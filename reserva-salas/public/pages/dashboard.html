@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard — Reserva de Salas</title>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+
+  <!-- Navbar -->
+  <nav class="navbar">
+    <span class="navbar-brand">🏢 Reserva de Salas</span>
+    <div class="navbar-user">
+      <span id="nomeUsuario"></span>
+      <button class="btn btn-outline" style="color:#fff;border-color:#fff" onclick="sair()">Sair</button>
+    </div>
+  </nav>
+
+  <div class="container">
+
+    <!-- Formulário de nova reserva -->
+    <div class="card">
+      <div class="card-title">➕ Nova Reserva</div>
+
+      <div class="alert alert-error"   id="erroReserva"></div>
+      <div class="alert alert-success" id="sucessoReserva"></div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+        <div class="form-group">
+          <label>Data e Hora de Início</label>
+          <input class="input" type="datetime-local" id="inicio">
+        </div>
+        <div class="form-group">
+          <label>Data e Hora de Fim</label>
+          <input class="input" type="datetime-local" id="fim">
+        </div>
+      </div>
+
+      <div class="form-group" style="margin-top:4px">
+        <label>Descrição (opcional)</label>
+        <input class="input" type="text" id="descricao" placeholder="Ex: Reunião de planejamento">
+      </div>
+
+      <button class="btn btn-outline" id="btnBuscar" onclick="buscarSalas()">
+        🔍 Ver Salas Disponíveis
+      </button>
+
+      <!-- Grade de salas -->
+      <div id="salasWrap" style="display:none;margin-top:20px">
+        <label style="margin-bottom:10px">Selecione uma sala:</label>
+        <div class="salas-grid" id="salasGrid"></div>
+        <button class="btn btn-primary" style="margin-top:16px" onclick="confirmarReserva()">
+          ✅ Confirmar Reserva
+        </button>
+      </div>
+    </div>
+
+    <!-- Minhas reservas -->
+    <div class="card">
+      <div class="card-title">📋 Minhas Reservas</div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>#</th><th>Sala</th><th>Início</th><th>Fim</th><th>Descrição</th><th>Status</th>
+            </tr>
+          </thead>
+          <tbody id="tabelaReservas">
+            <tr><td colspan="6" style="text-align:center;color:var(--muted)">Carregando...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </div>
+
+  <script src="/js/api.js"></script>
+  <script>
+    // Guarda autenticação
+    const usuario = getUsuario();
+    if (!usuario) window.location.href = '/';
+
+    document.getElementById('nomeUsuario').textContent = `Olá, ${usuario.nome}`;
+
+    let salaSelecionada = null;
+
+    // Formata data para exibição
+    function fmt(dt) {
+      return new Date(dt).toLocaleString('pt-BR', { dateStyle:'short', timeStyle:'short' });
+    }
+
+    function mostrar(id, msg, tipo) {
+      const el = document.getElementById(id);
+      el.textContent = msg;
+      el.className = `alert alert-${tipo} show`;
+      setTimeout(() => el.classList.remove('show'), 4000);
+    }
+
+    // Busca salas disponíveis
+    async function buscarSalas() {
+      const inicio = document.getElementById('inicio').value;
+      const fim    = document.getElementById('fim').value;
+      salaSelecionada = null;
+
+      if (!inicio || !fim) { mostrar('erroReserva','Informe início e fim.','error'); return; }
+      if (fim <= inicio)   { mostrar('erroReserva','Fim deve ser maior que início.','error'); return; }
+
+      try {
+        const salas = await api.salasDisponiveis(inicio, fim);
+        const grid  = document.getElementById('salasGrid');
+
+        if (!salas.length) {
+          grid.innerHTML = '<p style="color:var(--muted)">Nenhuma sala disponível neste horário.</p>';
+        } else {
+          grid.innerHTML = salas.map(s => `
+            <div class="sala-card" onclick="selecionarSala(this, ${s.id})" data-id="${s.id}">
+              <h3>${s.nome}</h3>
+              <p>📍 ${s.localizacao}</p>
+              <p>👥 Capacidade: ${s.capacidade}</p>
+            </div>
+          `).join('');
+        }
+        document.getElementById('salasWrap').style.display = 'block';
+      } catch (e) {
+        mostrar('erroReserva', e.message, 'error');
+      }
+    }
+
+    function selecionarSala(el, id) {
+      document.querySelectorAll('.sala-card').forEach(c => c.classList.remove('selected'));
+      el.classList.add('selected');
+      salaSelecionada = id;
+    }
+
+    async function confirmarReserva() {
+      if (!salaSelecionada) { mostrar('erroReserva','Selecione uma sala.','error'); return; }
+
+      const dados = {
+        sala_id:   salaSelecionada,
+        inicio:    document.getElementById('inicio').value,
+        fim:       document.getElementById('fim').value,
+        descricao: document.getElementById('descricao').value,
+      };
+
+      try {
+        await api.criarReserva(dados);
+        mostrar('sucessoReserva','Reserva criada com sucesso!','success');
+        document.getElementById('salasWrap').style.display = 'none';
+        document.getElementById('inicio').value = '';
+        document.getElementById('fim').value    = '';
+        document.getElementById('descricao').value = '';
+        salaSelecionada = null;
+        carregarReservas();
+      } catch (e) {
+        mostrar('erroReserva', e.message, 'error');
+      }
+    }
+
+    async function carregarReservas() {
+      try {
+        const reservas = await api.reservas();
+        const tbody = document.getElementById('tabelaReservas');
+        if (!reservas.length) {
+          tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:var(--muted)">Nenhuma reserva encontrada.</td></tr>';
+          return;
+        }
+        tbody.innerHTML = reservas.map(r => `
+          <tr>
+            <td>${r.id}</td>
+            <td><strong>${r.sala_nome}</strong></td>
+            <td>${fmt(r.inicio)}</td>
+            <td>${fmt(r.fim)}</td>
+            <td>${r.descricao || '—'}</td>
+            <td><span class="status status-${r.status}">${r.status}</span></td>
+          </tr>
+        `).join('');
+      } catch (e) {
+        console.error(e);
+      }
+    }
+
+    function sair() {
+      localStorage.clear();
+      window.location.href = '/';
+    }
+
+    carregarReservas();
+  </script>
+</body>
+</html>

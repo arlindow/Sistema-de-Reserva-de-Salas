@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin — Reserva de Salas</title>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+
+  <nav class="navbar">
+    <span class="navbar-brand">🏢 Reserva de Salas</span>
+    <div class="navbar-user">
+      <span id="nomeAdmin"></span>
+      <span class="badge-admin">Admin</span>
+      <button class="btn btn-outline" style="color:#fff;border-color:#fff" onclick="sair()">Sair</button>
+    </div>
+  </nav>
+
+  <div class="container">
+
+    <!-- Stats -->
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:16px;margin-bottom:24px">
+      <div class="card" style="margin:0;text-align:center">
+        <div style="font-size:28px;font-weight:700;color:var(--secondary)" id="totalReservas">—</div>
+        <div style="font-size:13px;color:var(--muted);margin-top:4px">Total de Reservas</div>
+      </div>
+      <div class="card" style="margin:0;text-align:center">
+        <div style="font-size:28px;font-weight:700;color:var(--success)" id="totalAtivas">—</div>
+        <div style="font-size:13px;color:var(--muted);margin-top:4px">Reservas Ativas</div>
+      </div>
+      <div class="card" style="margin:0;text-align:center">
+        <div style="font-size:28px;font-weight:700;color:var(--danger)" id="totalCanceladas">—</div>
+        <div style="font-size:13px;color:var(--muted);margin-top:4px">Canceladas</div>
+      </div>
+    </div>
+
+    <!-- Tabela de todas as reservas -->
+    <div class="card">
+      <div class="card-title">📋 Todas as Reservas</div>
+      <div class="alert alert-success" id="msgSucesso"></div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>#</th><th>Sala</th><th>Usuário</th>
+              <th>Início</th><th>Fim</th><th>Status</th><th>Ação</th>
+            </tr>
+          </thead>
+          <tbody id="tabelaAdmin">
+            <tr><td colspan="7" style="text-align:center;color:var(--muted)">Carregando...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Modal de cancelamento -->
+  <div class="modal-overlay" id="modalOverlay">
+    <div class="modal">
+      <div class="modal-title">❌ Cancelar Reserva</div>
+      <div class="form-group">
+        <label>Motivo do cancelamento</label>
+        <input class="input" type="text" id="motivoCancelamento"
+               placeholder="Informe o motivo...">
+      </div>
+      <div class="modal-actions">
+        <button class="btn btn-outline" onclick="fecharModal()">Voltar</button>
+        <button class="btn btn-danger"  onclick="executarCancelamento()">Confirmar Cancelamento</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="/js/api.js"></script>
+  <script>
+    const usuario = getUsuario();
+    if (!usuario || usuario.perfil !== 'admin') window.location.href = '/';
+
+    document.getElementById('nomeAdmin').textContent = `Olá, ${usuario.nome}`;
+
+    let reservaParaCancelar = null;
+
+    function fmt(dt) {
+      return new Date(dt).toLocaleString('pt-BR', { dateStyle:'short', timeStyle:'short' });
+    }
+
+    function mostrarSucesso(msg) {
+      const el = document.getElementById('msgSucesso');
+      el.textContent = msg;
+      el.classList.add('show');
+      setTimeout(() => el.classList.remove('show'), 4000);
+    }
+
+    async function carregarReservas() {
+      try {
+        const reservas = await api.reservas();
+
+        // Stats
+        document.getElementById('totalReservas').textContent   = reservas.length;
+        document.getElementById('totalAtivas').textContent     = reservas.filter(r => r.status === 'ativa').length;
+        document.getElementById('totalCanceladas').textContent = reservas.filter(r => r.status === 'cancelada').length;
+
+        const tbody = document.getElementById('tabelaAdmin');
+        if (!reservas.length) {
+          tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:var(--muted)">Nenhuma reserva ainda.</td></tr>';
+          return;
+        }
+
+        tbody.innerHTML = reservas.map(r => `
+          <tr>
+            <td>${r.id}</td>
+            <td><strong>${r.sala_nome}</strong></td>
+            <td>${r.usuario_nome}</td>
+            <td>${fmt(r.inicio)}</td>
+            <td>${fmt(r.fim)}</td>
+            <td><span class="status status-${r.status}">${r.status}</span></td>
+            <td>
+              ${r.status === 'ativa'
+                ? `<button class="btn btn-danger" style="padding:5px 12px;font-size:12px"
+                     onclick="abrirModal(${r.id})">Cancelar</button>`
+                : `<span style="color:var(--muted);font-size:12px">${r.motivo_cancelamento || '—'}</span>`
+              }
+            </td>
+          </tr>
+        `).join('');
+      } catch (e) {
+        console.error(e);
+      }
+    }
+
+    function abrirModal(id) {
+      reservaParaCancelar = id;
+      document.getElementById('motivoCancelamento').value = '';
+      document.getElementById('modalOverlay').classList.add('open');
+    }
+
+    function fecharModal() {
+      reservaParaCancelar = null;
+      document.getElementById('modalOverlay').classList.remove('open');
+    }
+
+    async function executarCancelamento() {
+      const motivo = document.getElementById('motivoCancelamento').value.trim();
+      if (!motivo) { alert('Informe o motivo do cancelamento.'); return; }
+
+      try {
+        await api.cancelarReserva(reservaParaCancelar, motivo);
+        fecharModal();
+        mostrarSucesso('Reserva cancelada com sucesso!');
+        carregarReservas();
+      } catch (e) {
+        alert(e.message);
+      }
+    }
+
+    // Fecha modal clicando fora
+    document.getElementById('modalOverlay').addEventListener('click', function(e) {
+      if (e.target === this) fecharModal();
+    });
+
+    function sair() {
+      localStorage.clear();
+      window.location.href = '/';
+    }
+
+    carregarReservas();
+  </script>
+</body>
+</html>

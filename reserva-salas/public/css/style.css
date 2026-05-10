@@ -1,0 +1,219 @@
+/* ── Reset & Variáveis ─────────────────────────────── */
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --primary:   #1a3a5c;
+  --secondary: #2e6da4;
+  --accent:    #e8f0fe;
+  --danger:    #c0392b;
+  --success:   #27ae60;
+  --bg:        #f4f6f9;
+  --card:      #ffffff;
+  --text:      #222222;
+  --muted:     #666666;
+  --border:    #dde3ec;
+  --radius:    8px;
+  --shadow:    0 2px 12px rgba(0,0,0,0.09);
+}
+
+body {
+  font-family: 'Segoe UI', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+}
+
+/* ── Botões ────────────────────────────────────────── */
+.btn {
+  padding: 9px 20px;
+  border: none;
+  border-radius: var(--radius);
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 600;
+  transition: opacity .2s, transform .1s;
+}
+.btn:hover  { opacity: .88; transform: translateY(-1px); }
+.btn:active { transform: translateY(0); }
+
+.btn-primary { background: var(--secondary); color: #fff; }
+.btn-danger  { background: var(--danger);    color: #fff; }
+.btn-outline {
+  background: transparent;
+  border: 2px solid var(--secondary);
+  color: var(--secondary);
+}
+
+/* ── Inputs ────────────────────────────────────────── */
+.input {
+  width: 100%;
+  padding: 10px 14px;
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius);
+  font-size: 14px;
+  outline: none;
+  transition: border-color .2s;
+}
+.input:focus { border-color: var(--secondary); }
+
+label { display: block; font-size: 13px; font-weight: 600; margin-bottom: 5px; color: var(--primary); }
+
+.form-group { margin-bottom: 16px; }
+
+/* ── Alertas ───────────────────────────────────────── */
+.alert {
+  padding: 10px 14px;
+  border-radius: var(--radius);
+  font-size: 13px;
+  margin-bottom: 14px;
+  display: none;
+}
+.alert.show   { display: block; }
+.alert-error  { background: #fdecea; color: var(--danger);  border-left: 4px solid var(--danger);  }
+.alert-success{ background: #eafaf1; color: var(--success); border-left: 4px solid var(--success); }
+
+/* ── Navbar ────────────────────────────────────────── */
+.navbar {
+  background: var(--primary);
+  color: #fff;
+  padding: 0 32px;
+  height: 58px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  box-shadow: var(--shadow);
+}
+.navbar-brand { font-size: 18px; font-weight: 700; letter-spacing: .5px; }
+.navbar-user  { display: flex; align-items: center; gap: 14px; font-size: 14px; }
+.badge-admin  {
+  background: var(--accent);
+  color: var(--primary);
+  padding: 3px 10px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+/* ── Layout principal ──────────────────────────────── */
+.container { max-width: 1100px; margin: 0 auto; padding: 28px 20px; }
+
+/* ── Cards ─────────────────────────────────────────── */
+.card {
+  background: var(--card);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 24px;
+  margin-bottom: 24px;
+}
+.card-title {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--primary);
+  margin-bottom: 18px;
+  padding-bottom: 10px;
+  border-bottom: 2px solid var(--accent);
+}
+
+/* ── Tabela ────────────────────────────────────────── */
+.table-wrap { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+th {
+  background: var(--primary);
+  color: #fff;
+  padding: 10px 14px;
+  text-align: left;
+  font-weight: 600;
+}
+td { padding: 10px 14px; border-bottom: 1px solid var(--border); }
+tr:last-child td { border-bottom: none; }
+tr:hover td { background: var(--accent); }
+
+/* ── Status badges ─────────────────────────────────── */
+.status {
+  padding: 3px 10px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+.status-ativa     { background: #eafaf1; color: var(--success); }
+.status-cancelada { background: #fdecea; color: var(--danger);  }
+
+/* ── Login page ────────────────────────────────────── */
+.login-wrap {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+}
+.login-card {
+  background: #fff;
+  padding: 40px 36px;
+  border-radius: 12px;
+  width: 100%;
+  max-width: 400px;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.18);
+}
+.login-logo {
+  text-align: center;
+  margin-bottom: 28px;
+}
+.login-logo h1 { font-size: 22px; color: var(--primary); margin-top: 8px; }
+.login-logo p  { font-size: 13px; color: var(--muted); margin-top: 4px; }
+
+/* ── Grid de salas ─────────────────────────────────── */
+.salas-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 16px;
+  margin-top: 8px;
+}
+.sala-card {
+  border: 2px solid var(--border);
+  border-radius: var(--radius);
+  padding: 16px;
+  cursor: pointer;
+  transition: border-color .2s, box-shadow .2s;
+}
+.sala-card:hover,
+.sala-card.selected {
+  border-color: var(--secondary);
+  box-shadow: 0 0 0 3px rgba(46,109,164,.15);
+}
+.sala-card h3  { font-size: 15px; color: var(--primary); margin-bottom: 4px; }
+.sala-card p   { font-size: 12px; color: var(--muted); }
+
+/* ── Modal ─────────────────────────────────────────── */
+.modal-overlay {
+  display: none;
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,.45);
+  z-index: 100;
+  align-items: center;
+  justify-content: center;
+}
+.modal-overlay.open { display: flex; }
+.modal {
+  background: #fff;
+  border-radius: 12px;
+  padding: 28px;
+  width: 100%;
+  max-width: 460px;
+  box-shadow: 0 8px 32px rgba(0,0,0,.2);
+}
+.modal-title {
+  font-size: 17px;
+  font-weight: 700;
+  color: var(--primary);
+  margin-bottom: 20px;
+}
+.modal-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 20px; }
+
+/* ── Responsivo ────────────────────────────────────── */
+@media (max-width: 600px) {
+  .navbar { padding: 0 16px; }
+  .container { padding: 16px 12px; }
+  .login-card { padding: 28px 20px; margin: 16px; }
+}
