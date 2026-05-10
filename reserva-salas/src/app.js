@@ -12,8 +12,8 @@ app.use(express.json());
 app.use(express.static(path.join(__dirname, '../public')));
 
 // Rotas
-//
-//
-//
+app.use('/api/auth', require('./routes/auth'));
+// app.use('/api/salas', require('./routes/salas'));
+// app.use('/api/reservas', require('./routes/reservas'));
 
 module.exports = app;
