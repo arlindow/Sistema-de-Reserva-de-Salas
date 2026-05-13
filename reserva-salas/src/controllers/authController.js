@@ -1,6 +1,6 @@
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
-const db = require('../database/db');
+//const db = require('../database/db');
 
 function login(req, res) {
     const {email, senha} = req.body;
@@ -8,10 +8,14 @@ function login(req, res) {
     if (!email || !senha) {
         return res.status(400).json({erro: 'email e senha são obrigatorios'});
     }
-    const usuario = db.prepare('SELECT * FROM usuarios WHERE email = ?').get(email);
+    const usuario = req.db.prepare('SELECT * FROM usuarios WHERE email = ?').get(email);
 
     if (!usuario) {
         return res.status(401).json({erro: 'Credenciais inválidas'});
+    }
+
+    if (!bcrypt.compareSync(senha, usuario.senha)) {
+        return res.status(401).json({ erro: 'Credenciais inválidas' });
     }
 
     // Gera token JWT (expira em 8 horas)

@@ -1,19 +1,25 @@
 const express = require('express');
-const cors = require('cors');
-const path = require('path');
+const cors    = require('cors');
+const path    = require('path');
 
-const app = express();
+function criarApp(dbInjetado) {
+  const app = express();
 
-// Middlewares globais
-app.use(cors());
-app.use(express.json());
+  app.use(cors());
+  app.use(express.json());
+  app.use(express.static(path.join(__dirname, '../public')));
 
-// Servir arquivos estáticos do front end
-app.use(express.static(path.join(__dirname, '../public')));
+  // Injeta o banco nas rotas (real ou de teste)
+  app.use((req, res, next) => {
+    req.db = dbInjetado || require('./database/db');
+    next();
+  });
 
-// Rotas
-app.use('/api/auth', require('./routes/auth'));
-app.use('/api/salas', require('./routes/salas'));
-app.use('/api/reservas', require('./routes/reservas'));
+  app.use('/api/auth',     require('./routes/auth'));
+  app.use('/api/salas',    require('./routes/salas'));
+  app.use('/api/reservas', require('./routes/reservas'));
 
-module.exports = app;
+  return app;
+}
+
+module.exports = criarApp;

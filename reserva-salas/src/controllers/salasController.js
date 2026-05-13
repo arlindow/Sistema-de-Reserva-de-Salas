@@ -1,7 +1,7 @@
-const db = require('../database/db');
+//const db = require('../database/db');
 
 function listar(req,res) {
-    const salas = db.prepare('SELECT * FROM salas WHERE ativa = 1').all();
+    const salas = req.db.prepare('SELECT * FROM salas WHERE ativa = 1').all();
     return res.json(salas);
 }
 
