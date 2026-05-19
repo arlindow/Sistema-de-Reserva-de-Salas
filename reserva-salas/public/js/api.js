@@ -1,4 +1,10 @@
-const API = 'https://turbo-carnival-v9g7pvv5rp9hqpj-3000.app.github.dev/api'; //http://localhost:3000/api
+// antes
+//const API = 'https://turbo-carnival-v9g7pvv5rp9hqpj-3000.app.github.dev/api'; //http://localhost:3000/api
+
+// Depois: Troque a URL fixa pela URL dinâmica (Railway gera uma URL própria):
+
+const API = window.location.origin + '/api';
+
 
 function getToken() {
   return localStorage.getItem('token');
